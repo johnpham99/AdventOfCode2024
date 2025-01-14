@@ -2,20 +2,12 @@
 .DS_Store
 
 # .NET build output
-bin/
-obj/
-
-# User-specific files
-.idea/
-.vs/
-.vscode/
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
+*/bin/
+*/obj/
 
 # JetBrains Rider, ReSharper, and Visual Studio temporary files
 .idea/
+.vs/
 .vscode/
 *.suo
 *.user
