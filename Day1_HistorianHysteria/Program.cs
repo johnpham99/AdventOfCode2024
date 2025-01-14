@@ -1,9 +1,4 @@
-﻿
-// Sort the Arrays
-// Iterate and calculate the differences
-// Sum the differences
-
-class Program
+﻿class Program
 {
     static List<int> leftList = new List<int>();
     static List<int> rightList = new List<int>();
@@ -11,27 +6,29 @@ class Program
 
     static void Main(string[] args)
     {
+        ReadInputFileAndPopulateLists("input.txt");
+
+        if (!ValidateAndSortLists())
+        {
+            Console.WriteLine("Invalid input file...");
+            return;
+        }
+
         // Part 1
-        readInputFileAndPopulateLists("input.txt");
-
-        leftList.Sort();
-        rightList.Sort();
-
-        int distance = sumDifferencesBetweenLists();
+        int distance = SumDifferencesBetweenLists();
         Console.WriteLine("Distance: " + distance);
 
         // Part 2
-        countItemsInRightList();
-
-        int similarity = calculateSimilarityBetweenLists();
+        CountItemsInRightList();
+        int similarity = CalculateSimilarityBetweenLists();
         Console.WriteLine("Similarity: " + similarity);
     }
-    private static void readInputFileAndPopulateLists(string filePath)
+    private static void ReadInputFileAndPopulateLists(string filePath)
     {
         string? line;
         try
         {
-            StreamReader sr = new StreamReader(filePath);
+            using StreamReader sr = new StreamReader(filePath);
             line = sr.ReadLine();
             while (line != null)
             {
@@ -45,7 +42,6 @@ class Program
 
                 line = sr.ReadLine();
             }
-            sr.Close();
         }
         catch (Exception e)
         {
@@ -53,13 +49,8 @@ class Program
         }
     }
 
-    private static int calculateSimilarityBetweenLists()
+    private static int CalculateSimilarityBetweenLists()
     {
-        if (!listsValid())
-        {
-            return -1;
-        }
-
         int similarityScore = 0;
 
         foreach (int value in leftList)
@@ -71,7 +62,7 @@ class Program
         return similarityScore;
     }
 
-    private static void countItemsInRightList()
+    private static void CountItemsInRightList()
     {
         if (rightListCounts.Count != 0)
         {
@@ -84,44 +75,45 @@ class Program
         }
     }
 
-    private static int sumDifferencesBetweenLists()
+    private static int SumDifferencesBetweenLists()
     {
-        if (!listsValid())
-        {
-            return -1;
-        }
-
         int totalDifference = 0;
         for (int i = 0; i < leftList.Count; i++)
         {
-            int absoluteDifference = calculateAbsoluteDifference(leftList[i], rightList[i]);
+            int absoluteDifference = CalculateAbsoluteDifference(leftList[i], rightList[i]);
             totalDifference += absoluteDifference;
         }
 
         return totalDifference;
     }
 
-    private static int calculateAbsoluteDifference(int x, int y)
+    private static int CalculateAbsoluteDifference(int x, int y)
     {
-        int differnece = x - y;
+        int difference = x - y;
 
-        if (differnece < 0)
+        if (difference < 0)
         {
-            differnece *= -1;
+            difference *= -1;
         }
 
-        return differnece;
+        return difference;
     }
 
-    private static bool listsValid()
+    private static bool ValidateAndSortLists()
     {
-        if (leftList.Count != rightList.Count ||
-             leftList.Count == 0 || rightList.Count == 0)
+        if (ListsValid())
         {
-            return false;
+            leftList.Sort();
+            rightList.Sort();
+            return true;
         }
+        return false;
+    }
 
-        return true;
+
+    private static bool ListsValid()
+    {
+        return leftList.Count == rightList.Count;
     }
 
 }
