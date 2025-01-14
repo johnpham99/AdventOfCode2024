@@ -1,0 +1,38 @@
+# macOS files
+.DS_Store
+
+# .NET build output
+bin/
+obj/
+
+# User-specific files
+.idea/
+.vs/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# JetBrains Rider, ReSharper, and Visual Studio temporary files
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# NuGet package directories
+packages/
+*.nupkg
+.nuget/
+
+# Windows Installer files
+Thumbs.db
+Desktop.ini
+
+# Log files
+*.log
+
+# Backup files
+*~
