@@ -4,6 +4,7 @@
     private const int PART_TWO = 1;
     private const int MAX_DIFF = 3;
     private const int MIN_DIFF = 1;
+
     static void Main(string[] args)
     {
         using StreamReader? inputFile = LoadInputFile("input.txt");
