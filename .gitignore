@@ -28,3 +28,5 @@ Desktop.ini
 
 # Backup files
 *~
+
+*.txt
