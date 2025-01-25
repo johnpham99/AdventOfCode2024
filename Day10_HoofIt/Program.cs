@@ -1,5 +1,8 @@
 ﻿class Program
 {
+    const int PART_ONE = 0;
+    const int PART_TWO = 1;
+
     static void Main()
     {
         string[]? map = ReadInputFile("input.txt");
@@ -9,48 +12,53 @@
         }
 
         HashSet<(int i, int j)> trailHeads = FindTrailHeads(map);
-        int sum = SumOfTrailHeadScores(trailHeads, map);
-        Console.WriteLine("Part 1: " + sum);
+        int[] sums = SumOfTrailHeads(trailHeads, map);
+        Console.WriteLine("Part 1: " + sums[PART_ONE]);
+        Console.WriteLine("Part 2: " + sums[PART_TWO]);
     }
 
-    private static int SumOfTrailHeadScores(HashSet<(int i, int j)> trailHeads, string[] map)
+    private static int[] SumOfTrailHeads(HashSet<(int i, int j)> trailHeads, string[] map)
     {
-        int sum = 0;
+        int sum1 = 0;
+        int sum2 = 0;
 
         foreach ((int i, int j) trailHead in trailHeads)
         {
-            sum += FindScoreOfTrailHead(trailHead, map);
+            int[] sums = FindSumsOfTrailHead(trailHead, map);
+            sum1 += sums[PART_ONE];
+            sum2 += sums[PART_TWO];
         }
 
-        return sum;
+        return new int[] { sum1, sum2 };
     }
 
-    private static int FindScoreOfTrailHead((int i, int j) trailHead, string[] map)
+    private static int[] FindSumsOfTrailHead((int i, int j) trailHead, string[] map)
     {
-        HashSet<(int i, int j)> trailTails = new HashSet<(int i, int j)>();
-        HashSet<(int i, int j)> visited = new HashSet<(int i, int j)>();
-        TraverseMap(trailHead, trailTails, visited, map);
-        return trailTails.Count;
+        Dictionary<(int i, int j), int> trailTails = new Dictionary<(int i, int j), int>();
+
+        TraverseMap(trailHead, trailTails, map);
+
+        int rating = 0;
+        foreach ((int i, int j) trailTail in trailTails.Keys)
+        {
+            rating += trailTails[trailTail];
+        }
+
+        return new int[] { trailTails.Count, rating };
     }
 
     private static void TraverseMap((int i, int j) position,
-                                    HashSet<(int i, int j)> trailTails,
-                                    HashSet<(int i, int j)> visited,
+                                    Dictionary<(int i, int j), int> trailTails,
                                     string[] map)
     {
-        if (VisitedOrOutOfBounds(position, visited, map))
+        if (map[position.i][position.j] == '9')
         {
-            return;
-        }
+            if (!trailTails.ContainsKey(position))
+            {
+                trailTails.Add(position, 0);
+            }
 
-        visited.Add(position);
-
-        int i = position.i;
-        int j = position.j;
-
-        if (map[i][j] == '9')
-        {
-            trailTails.Add(position);
+            trailTails[position] = trailTails[position] + 1;
         }
 
         (int i, int j) upPosition = (position.i - 1, position.j);
@@ -62,19 +70,18 @@
 
         foreach ((int i, int j) newPosition in newPositions)
         {
-            if (ValidMove(position, newPosition, visited, map))
+            if (ValidMove(position, newPosition, map))
             {
-                TraverseMap(newPosition, trailTails, visited, map);
+                TraverseMap(newPosition, trailTails, map);
             }
         }
     }
 
     private static bool ValidMove((int i, int j) position,
                                  (int i, int j) newPosition,
-                                 HashSet<(int i, int j)> visited,
                                  string[] map)
     {
-        if (VisitedOrOutOfBounds(newPosition, visited, map))
+        if (IsOutOfBounds(newPosition, map))
         {
             return false;
         }
@@ -84,22 +91,12 @@
         return newPositionHeight - positionHeight == 1;
     }
 
-    private static bool VisitedOrOutOfBounds((int i, int j) position, HashSet<(int i, int j)> visited, string[] map)
+    private static bool IsOutOfBounds((int i, int j) position, string[] map)
     {
         int i = position.i;
         int j = position.j;
 
-        if (i < 0 || i >= map.Length || j < 0 || j >= map[i].Length)
-        {
-            return true;
-        }
-
-        if (visited.Contains(position))
-        {
-            return true;
-        }
-
-        return false;
+        return i < 0 || i >= map.Length || j < 0 || j >= map[i].Length;
     }
 
     private static HashSet<(int i, int j)> FindTrailHeads(string[] map)
