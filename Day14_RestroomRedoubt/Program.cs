@@ -96,7 +96,7 @@ class Program
                 {
                     safetyFactor *= numRobots;
                 }
-                Console.WriteLine("Part 1: " + safetyFactor); // 229069152
+                Console.WriteLine("Part 1: " + safetyFactor);
             }
 
             if (turns == 1000000000)
