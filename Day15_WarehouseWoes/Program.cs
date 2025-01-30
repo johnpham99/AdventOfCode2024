@@ -8,6 +8,12 @@
             return;
         }
 
+        char[,]? wideMap = WidenMap(map);
+        if (wideMap == null)
+        {
+            return;
+        }
+
         char[]? moves = ReadMovesFromInput("input.txt");
         if (moves == null)
         {
@@ -15,9 +21,14 @@
         }
 
         PerformMoves(map, moves);
-
         int sumOfBoxGps = CalculateSumOfBoxGps(map);
-        Console.WriteLine("Part 1: " + sumOfBoxGps);
+        PrintMap(map);
+        Console.WriteLine("Part 1: " + sumOfBoxGps + '\n');
+
+        PerformMoves(wideMap, moves);
+        int sumOfWideBoxGps = CalculateSumOfBoxGps(wideMap);
+        PrintMap(wideMap);
+        Console.WriteLine("Part 2: " + sumOfWideBoxGps);
     }
 
     private static int CalculateSumOfBoxGps(char[,] map)
@@ -27,7 +38,7 @@
         {
             for (int j = 0; j < map.GetLength(1); j++)
             {
-                if (map[i, j] == 'O')
+                if (map[i, j] == 'O' || map[i, j] == '[')
                 {
                     sum += (100 * i + j);
                 }
@@ -39,6 +50,7 @@
     private static void PerformMoves(char[,] map, char[] moves)
     {
         (int i, int j) currPos = ReadStartingPositionFromMap(map);
+
 
         foreach (char move in moves)
         {
@@ -76,8 +88,86 @@
             return false;
         }
 
+        if (map[box.i, box.j] == 'O')
+        {
+            return PushBox(box, dir, map);
+        }
+
+        if (map[box.i, box.j] == '[' || map[box.i, box.j] == ']')
+        {
+            return PushWideBox(box, dir, map);
+        }
+
+        return false;
+    }
+
+    private static bool PushWideBox((int i, int j) box, (int i, int j) dir, char[,] map)
+    {
         (int i, int j) nextPos = (box.i + dir.i, box.j + dir.j);
 
+        if (IsWall(nextPos, map))
+        {
+            return false;
+        }
+
+        if (IsBox(nextPos, map))
+        {
+            if (!PushWideBox(nextPos, dir, map))
+            {
+                return false;
+            }
+        }
+
+        if (dir.i == 0)
+        {
+            if (map[box.i, box.j] == '[')
+            {
+                map[nextPos.i, nextPos.j] = '[';
+                map[box.i, box.j] = '.';
+            }
+
+            if (map[box.i, box.j] == ']')
+            {
+                map[nextPos.i, nextPos.j] = ']';
+                map[box.i, box.j] = '.';
+            }
+        }
+        else
+        {
+            (int i, int j) otherPart = (box.i, box.j + 1);
+            if (map[box.i, box.j] == ']')
+            {
+                otherPart = (box.i, box.j - 1);
+            }
+
+            (int i, int j) otherNextPos = (otherPart.i + dir.i, otherPart.j + dir.j);
+
+            if (IsWall(otherNextPos, map))
+            {
+                return false;
+            }
+
+            if (IsBox(otherNextPos, map))
+            {
+                if (!PushWideBox(otherNextPos, dir, map))
+                {
+                    return false;
+                }
+            }
+
+            map[nextPos.i, nextPos.j] = map[box.i, box.j];
+            map[otherNextPos.i, otherNextPos.j] = map[otherPart.i, otherPart.j];
+
+            map[box.i, box.j] = '.';
+            map[otherPart.i, otherPart.j] = '.';
+        }
+
+        return true;
+    }
+
+    private static bool PushBox((int i, int j) box, (int i, int j) dir, char[,] map)
+    {
+        (int i, int j) nextPos = (box.i + dir.i, box.j + dir.j);
         if (IsWall(nextPos, map))
         {
             return false;
@@ -103,7 +193,9 @@
 
     private static bool IsBox((int i, int j) pos, char[,] map)
     {
-        return map[pos.i, pos.j] == 'O';
+        return map[pos.i, pos.j] == 'O' ||
+            map[pos.i, pos.j] == '[' ||
+            map[pos.i, pos.j] == ']';
     }
 
     private static (int, int) GetDirection(char move)
@@ -180,6 +272,43 @@
         }
 
         return map;
+    }
+
+    private static char[,]? WidenMap(char[,] map)
+    {
+        char[,] widerMap = new char[map.GetLength(0), map.GetLength(1) * 2];
+
+        for (int i = 0; i < map.GetLength(0); i++)
+        {
+            for (int j = 0; j < map.GetLength(1); j++)
+            {
+                if (map[i, j] == '#')
+                {
+                    widerMap[i, j * 2] = '#';
+                    widerMap[i, j * 2 + 1] = '#';
+                }
+
+                if (map[i, j] == 'O')
+                {
+                    widerMap[i, j * 2] = '[';
+                    widerMap[i, j * 2 + 1] = ']';
+                }
+
+                if (map[i, j] == '.')
+                {
+                    widerMap[i, j * 2] = '.';
+                    widerMap[i, j * 2 + 1] = '.';
+                }
+
+                if (map[i, j] == '@')
+                {
+                    widerMap[i, j * 2] = '@';
+                    widerMap[i, j * 2 + 1] = '.';
+                }
+            }
+        }
+
+        return widerMap;
     }
 
     private static char[]? ReadMovesFromInput(string filePath)
