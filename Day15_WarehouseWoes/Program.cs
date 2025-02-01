@@ -51,7 +51,6 @@
     {
         (int i, int j) currPos = ReadStartingPositionFromMap(map);
 
-
         foreach (char move in moves)
         {
             currPos = Move(currPos, move, map);
@@ -103,6 +102,94 @@
 
     private static bool PushWideBox((int i, int j) box, (int i, int j) dir, char[,] map)
     {
+        if (!IsBox(box, map))
+        {
+            return false;
+        }
+
+        if (dir.i == 0)
+        {
+            return PushWideBoxHorizontally(box, dir, map);
+        }
+
+
+        if (dir.j == 0)
+        {
+            return PushWideBoxVertically(box, dir, map);
+        }
+
+        return false;
+    }
+
+    private static bool PushWideBoxVertically((int i, int j) box, (int i, int j) dir, char[,] map)
+    {
+        if (dir != (1, 0) && dir != (-1, 0))
+        {
+            return false;
+        }
+
+        if (!IsBox(box, map))
+        {
+            return false;
+        }
+
+        HashSet<(int, int)> boxesOnStack = new HashSet<(int, int)>();
+        Queue<(int, int)> boxesToProcess = new Queue<(int, int)>();
+        Stack<(int, int)> positionsToPush = new Stack<(int, int)>();
+        boxesToProcess.Enqueue(box);
+
+        while (boxesToProcess.Count != 0)
+        {
+            (int i, int j) currBox = boxesToProcess.Dequeue();
+            (int i, int j) otherHalf = (currBox.i, currBox.j + 1);
+            if (map[currBox.i, currBox.j] == ']')
+            {
+                otherHalf = (currBox.i, currBox.j - 1);
+            }
+
+            (int, int) nextPos = (currBox.i + dir.i, currBox.j);
+            (int, int) otherNextPos = (otherHalf.i + dir.i, otherHalf.j);
+
+            if (IsWall(nextPos, map) || IsWall(otherNextPos, map))
+            {
+                return false;
+            }
+
+            if (!boxesOnStack.Contains(currBox))
+            {
+                positionsToPush.Push(currBox);
+                boxesOnStack.Add(currBox);
+            }
+
+            if (!boxesOnStack.Contains(otherHalf))
+            {
+                positionsToPush.Push(otherHalf);
+                boxesOnStack.Add(otherHalf);
+            }
+
+            if (IsBox(nextPos, map))
+            {
+                boxesToProcess.Enqueue(nextPos);
+            }
+
+            if (IsBox(otherNextPos, map))
+            {
+                boxesToProcess.Enqueue(otherNextPos);
+            }
+        }
+
+        while (positionsToPush.Count != 0)
+        {
+            (int i, int j) pos = positionsToPush.Pop();
+            map[pos.i + dir.i, pos.j + dir.j] = map[pos.i, pos.j];
+            map[pos.i, pos.j] = '.';
+        }
+
+        return true;
+    }
+
+    private static bool PushWideBoxHorizontally((int i, int j) box, (int i, int j) dir, char[,] map)
+    {
         (int i, int j) nextPos = (box.i + dir.i, box.j + dir.j);
 
         if (IsWall(nextPos, map))
@@ -112,54 +199,22 @@
 
         if (IsBox(nextPos, map))
         {
-            if (!PushWideBox(nextPos, dir, map))
+            if (!PushWideBoxHorizontally(nextPos, dir, map))
             {
                 return false;
             }
         }
 
-        if (dir.i == 0)
+        if (map[box.i, box.j] == '[')
         {
-            if (map[box.i, box.j] == '[')
-            {
-                map[nextPos.i, nextPos.j] = '[';
-                map[box.i, box.j] = '.';
-            }
-
-            if (map[box.i, box.j] == ']')
-            {
-                map[nextPos.i, nextPos.j] = ']';
-                map[box.i, box.j] = '.';
-            }
-        }
-        else
-        {
-            (int i, int j) otherPart = (box.i, box.j + 1);
-            if (map[box.i, box.j] == ']')
-            {
-                otherPart = (box.i, box.j - 1);
-            }
-
-            (int i, int j) otherNextPos = (otherPart.i + dir.i, otherPart.j + dir.j);
-
-            if (IsWall(otherNextPos, map))
-            {
-                return false;
-            }
-
-            if (IsBox(otherNextPos, map))
-            {
-                if (!PushWideBox(otherNextPos, dir, map))
-                {
-                    return false;
-                }
-            }
-
-            map[nextPos.i, nextPos.j] = map[box.i, box.j];
-            map[otherNextPos.i, otherNextPos.j] = map[otherPart.i, otherPart.j];
-
+            map[nextPos.i, nextPos.j] = '[';
             map[box.i, box.j] = '.';
-            map[otherPart.i, otherPart.j] = '.';
+        }
+
+        if (map[box.i, box.j] == ']')
+        {
+            map[nextPos.i, nextPos.j] = ']';
+            map[box.i, box.j] = '.';
         }
 
         return true;
